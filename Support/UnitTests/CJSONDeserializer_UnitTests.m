@@ -29,7 +29,6 @@
 
 #import "CJSONDeserializer_UnitTests.h"
 #import "CJSONDeserializer.h"
-#import "CJSONScanner.h"
 
 
 @implementation CJSONDeserializer_UnitTests
@@ -221,7 +220,8 @@
 	NSError *error = nil;
 	NSArray *array = [[CJSONDeserializer deserializer] deserialize:jsonData error:&error];
 	STAssertNotNil(error, @"An error should be reported when deserializing a non unicode JSON string", nil);
-	STAssertEqualObjects([error domain], kJSONScannerErrorDomain, @"The error must be of the CJSONScanner error domain");
+	STAssertEqualObjects([error domain], kJSONDeserializerErrorDomain, @"The error must be of the CJSONDeserializer error domain");
+	STAssertEquals([error code], (NSInteger)-2, @"The error must be 'Invalid encoding'");
 }
 
 @end

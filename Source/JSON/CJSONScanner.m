@@ -101,12 +101,9 @@ if (theData && theData.length >= 4)
 			theEncoding = NSUTF16BigEndianStringEncoding;
 		}
 		
-	if (theEncoding != NSUTF8StringEncoding)
-		{
-		NSString *theString = [[NSString alloc] initWithData:theData encoding:theEncoding];
-		theData = [theString dataUsingEncoding:NSUTF8StringEncoding];
-		[theString release];
-		}
+	NSString *theString = [[NSString alloc] initWithData:theData encoding:theEncoding];
+	theData = [theString dataUsingEncoding:NSUTF8StringEncoding];
+	[theString release];
 	}
 [super setData:theData];
 }

@@ -77,7 +77,7 @@ scanner = NULL;
 
 #pragma mark -
 
-- (id)deserialize:(NSData *)inData error:(NSError **)outError
+- (id)deserialize:(NSData *)inData scanSelector:(SEL)scanSelector error:(NSError **)outError
 {
 if (inData == NULL || [inData length] == 0)
 	{
@@ -87,45 +87,48 @@ if (inData == NULL || [inData length] == 0)
 	return(NULL);
 	}
 self.scanner.data = inData;
+if (self.scanner.data == NULL)
+	{
+	if (outError)
+		{
+		NSDictionary *theUserInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+			@"Invalid encoding. JSON data must be encoded in Unicode.", NSLocalizedDescriptionKey,
+			NULL];
+		*outError = [NSError errorWithDomain:kJSONDeserializerErrorDomain code:-2 userInfo:theUserInfo];
+		}
+	return(NULL);
+	}
 id theObject = NULL;
-if ([self.scanner scanJSONObject:&theObject error:outError] == YES)
+id *outObject = &theObject;
+NSMethodSignature *methodSignature = [self.scanner methodSignatureForSelector:scanSelector];
+NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
+[invocation setTarget:self.scanner];
+[invocation setSelector:scanSelector];
+[invocation setArgument:&outObject atIndex:2];
+[invocation setArgument:&outError atIndex:3];
+[invocation invoke];
+BOOL success = NO;
+[invocation getReturnValue:&success];
+
+if (success == YES)
 	return(theObject);
 else
 	return(NULL);
 }
 
+- (id)deserialize:(NSData *)inData error:(NSError **)outError
+{
+return [self deserialize:inData scanSelector:@selector(scanJSONObject:error:) error:outError];
+}
+
 - (id)deserializeAsDictionary:(NSData *)inData error:(NSError **)outError
 {
-if (inData == NULL || [inData length] == 0)
-	{
-	if (outError)
-		*outError = [NSError errorWithDomain:kJSONDeserializerErrorDomain code:-1 userInfo:NULL];
-
-	return(NULL);
-	}
-self.scanner.data = inData;
-NSDictionary *theDictionary = NULL;
-if ([self.scanner scanJSONDictionary:&theDictionary error:outError] == YES)
-	return(theDictionary);
-else
-	return(NULL);
+return [self deserialize:inData scanSelector:@selector(scanJSONDictionary:error:) error:outError];
 }
 
 - (id)deserializeAsArray:(NSData *)inData error:(NSError **)outError
 {
-if (inData == NULL || [inData length] == 0)
-	{
-	if (outError)
-		*outError = [NSError errorWithDomain:kJSONDeserializerErrorDomain code:-1 userInfo:NULL];
-
-	return(NULL);
-	}
-self.scanner.data = inData;
-NSArray *theArray = NULL;
-if ([self.scanner scanJSONArray:&theArray error:outError] == YES)
-	return(theArray);
-else
-	return(NULL);
+return [self deserialize:inData scanSelector:@selector(scanJSONArray:error:) error:outError];
 }
 
 @end
