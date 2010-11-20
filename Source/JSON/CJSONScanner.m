@@ -36,6 +36,10 @@
 #define TREAT_COMMENTS_AS_WHITESPACE 0
 #endif // !defined(TREAT_COMMENTS_AS_WHITESPACE)
 
+#if !defined(ACCEPT_NON_UNICODE_DATA)
+#define ACCEPT_NON_UNICODE_DATA 0
+#endif // !defined(ACCEPT_NON_UNICODE_DATA)
+
 NSString *const kJSONScannerErrorDomain = @"CJSONScannerErrorDomain";
 
 inline static int HexToInt(char inCharacter)
@@ -102,6 +106,12 @@ if (theData && theData.length >= 4)
 		}
 		
 	NSString *theString = [[NSString alloc] initWithData:theData encoding:theEncoding];
+#if ACCEPT_NON_UNICODE_DATA
+	if (theString == NULL)
+		{
+		theString = [[NSString alloc] initWithData:theData encoding:NSWindowsCP1252StringEncoding];
+		}
+#endif // ACCEPT_NON_UNICODE_DATA
 	theData = [theString dataUsingEncoding:NSUTF8StringEncoding];
 	[theString release];
 	}
